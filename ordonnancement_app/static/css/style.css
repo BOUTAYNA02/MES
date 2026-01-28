@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+/* ===== BODY ===== */
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f4f6fb;
+}
+
+/* ===== HEADER / HERO ===== */
+.hero {
+    background: linear-gradient(135deg, #FFD700, #FFEB3B);
+    padding: 80px 20px;
+    text-align: center;
+    color: black;
+}
+
+.hero h1 {
+    font-size: 52px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.hero p {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+}
+
+/* ===== CARDS (formulaires et résultats) ===== */
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    margin-bottom: 30px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.6s ease;
+}
+
+/* ===== INPUT / SELECT ===== */
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 12px;
+    border: 2px solid #FFD700;
+    font-size: 14px;
+}
+
+/* ===== BUTTON ===== */
+button {
+    margin-top: 20px;
+    padding: 14px;
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    background: #FFD700;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background: #FBC02D;
+    transform: translateY(-4px);
+}
+
+/* ===== TABLE ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 2px solid #FFD700;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background: #FFD700;
+    color: black;
+    font-weight: 600;
+}
+
+/* ===== RÉSULTATS ===== */
+.results {
+    margin-top: 30px;
+    padding: 25px;
+    border-radius: 14px;
+    background: #fafafa;
+}
+
+/* ===== GANTT MULTI-MACHINES ===== */
+.gantt {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gantt span {
+    width: 120px;
+    font-weight: 600;
+}
+
+/* Barres Gantt */
+.bar {
+    padding: 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-align: center;
+    background: #FFD700;
+    animation: grow 1s ease;
+}
+
+/* Dégradé ou couleurs par machine */
+.bar:nth-child(odd) { background-color: #FFD700; }
+.bar:nth-child(even) { background-color: #FFEB3B; }
+
+/* ===== ANIMATION BAR ===== */
+@keyframes grow {
+    from { width: 0; }
+    to { }
+}
+
+/* ===== EFFETS CARDS ===== */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.6s forwards;
+}
+
+.slide-in {
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: slideIn 0.6s forwards;
+}
+
+.zoom-in {
+    opacity: 0;
+    transform: scale(0.95);
+    animation: zoomIn 0.6s forwards;
+}
+
+.pop {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: pop 0.6s forwards;
+}
+
+/* ===== KEYFRAMES ===== */
+@keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zoomIn {
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pop {
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .container { width: 95%; padding: 20px; }
+    table { font-size: 14px; }
+    .gantt span { width: 90px; font-size: 12px; }
+    .bar { font-size: 12px; line-height: 25px; padding: 6px; }
+}
