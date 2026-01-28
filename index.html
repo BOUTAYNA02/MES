@@ -1,120 +1,1913 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>SMART SCHEDULING SIMULATOR</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<script src="{{ url_for('static', filename='js/animations.js') }}" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordonnancement Industriel - Simulation et Optimisation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #6366f1;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --gray-color: #64748b;
+            --light-gray: #e2e8f0;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-hover: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 12px;
+            --glass-effect: backdrop-filter: blur(10px) saturate(180%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.08) 0%, transparent 55%),
+                radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 55%);
+            z-index: -1;
+        }
+
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            color: var(--dark-color);
+            letter-spacing: -0.025em;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .logo h1 {
+            font-size: 1.6rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+        }
+
+        .logo span {
+            font-size: 0.85rem;
+            color: var(--gray-color);
+            font-weight: 500;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 6px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-links li {
+            margin: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-color);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 50px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .nav-links a.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .nav-links a i {
+            font-size: 0.8rem;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .mobile-menu-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            min-height: calc(100vh - 70px);
+            gap: 24px;
+            padding: 24px 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 340px;
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            height: fit-content;
+            position: sticky;
+            top: 94px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.4rem;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--light-gray);
+            position: relative;
+        }
+
+        .sidebar h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: var(--primary-gradient);
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            margin-bottom: 16px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        .select-wrapper, .input-wrapper {
+            position: relative;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: white;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        /* Job Table */
+        .jobs-table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-top: 20px;
+            border: 1px solid var(--light-gray);
+        }
+
+        .jobs-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .jobs-table th {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 18px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark-color);
+            border-bottom: 2px solid var(--light-gray);
+            font-size: 0.9rem;
+        }
+
+        .jobs-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: var(--transition);
+        }
+
+        .jobs-table tr:hover td {
+            background: #f8fafc;
+        }
+
+        .jobs-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .time-input {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .time-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--gray-color);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* Action Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            letter-spacing: 0.025em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light-gray);
+            transition: var(--transition);
+        }
+
+        .stat:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 6px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Main Panel */
+        .main-panel {
+            flex: 1;
+            padding: 8px 0;
+            min-width: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .panel-title {
+            font-size: 1.8rem;
+            color: var(--dark-color);
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Gantt Chart */
+        .gantt-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .gantt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .gantt-title {
+            font-size: 1.3rem;
+            color: var(--dark-color);
+            font-weight: 700;
+        }
+
+        .gantt-chart {
+            min-height: 320px;
+            position: relative;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid var(--light-gray);
+        }
+
+        .gantt-machine {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            height: 48px;
+        }
+
+        .gantt-machine-label {
+            width: 140px;
+            font-weight: 600;
+            color: var(--dark-color);
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gantt-machine-label i {
+            color: var(--primary-color);
+        }
+
+        .gantt-timeline {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(to right, #f8fafc, #f1f5f9);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--light-gray);
+        }
+
+        .gantt-job {
+            position: absolute;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .gantt-job::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .gantt-job:hover {
+            transform: scale(1.05) translateY(-2px);
+            z-index: 10;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .time-axis {
+            display: flex;
+            margin-left: 140px;
+            margin-top: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .time-tick {
+            flex: 1;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            font-weight: 500;
+        }
+
+        /* Results Panel */
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--primary-gradient);
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .result-title {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .result-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+
+        .result-card:nth-child(2) .result-value {
+            color: var(--secondary-color);
+        }
+
+        .result-card:nth-child(3) .result-value {
+            color: var(--accent-color);
+        }
+
+        .result-card:nth-child(4) .result-value {
+            color: var(--danger-color);
+        }
+
+        /* Documentation */
+        .docs-container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 28px;
+            margin-top: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .docs-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light-gray);
+            margin-bottom: 24px;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 4px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .docs-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-color);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            border-radius: 8px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .docs-tab:hover {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .docs-tab.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .docs-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .docs-content.active {
+            display: block;
+        }
+
+        .docs-section {
+            margin-bottom: 28px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--light-gray);
+        }
+
+        .docs-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .docs-section h3 i {
+            color: var(--primary-color);
+        }
+
+        .docs-section p {
+            margin-bottom: 16px;
+            color: var(--gray-color);
+            line-height: 1.7;
+        }
+
+        .algorithm-list {
+            list-style-type: none;
+        }
+
+        .algorithm-list li {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: var(--transition);
+        }
+
+        .algorithm-list li:hover {
+            background: #f8fafc;
+            border-radius: 8px;
+            transform: translateX(4px);
+        }
+
+        .algorithm-list li:last-child {
+            border-bottom: none;
+        }
+
+        .algorithm-name {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .algorithm-desc {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-info h3 {
+            font-size: 1.3rem;
+            color: white;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-info p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .footer-tags {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .tag:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tag:nth-child(5) {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1100px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                background: var(--card-bg);
+                backdrop-filter: blur(20px);
+                width: 100%;
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                transform: translateY(-150%);
+                transition: var(--transition);
+                z-index: 999;
+                border-radius: 0 0 20px 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .nav-links.active {
+                transform: translateY(0);
+            }
+            
+            .nav-links li {
+                width: 100%;
+            }
+            
+            .nav-links a {
+                width: 100%;
+                justify-content: center;
+                border-radius: 12px;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .gantt-machine-label {
+                width: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .time-axis {
+                margin-left: 100px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-
 <body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Ordonnancement Industriel</h1>
+                    <span>Simulation et Optimisation de Production</span>
+                </div>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#simulation" class="active"><i class="fas fa-play-circle"></i> Simulation</a></li>
+                    <li><a href="#results"><i class="fas fa-chart-bar"></i> Résultats</a></li>
+                    <li><a href="#documentation"><i class="fas fa-book"></i> Documentation</a></li>
+                    <li><a href="#about"><i class="fas fa-info-circle"></i> À propos</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
 
-<header class="hero">
-    <h1>SMART SCHEDULING SIMULATOR</h1>
-    <p>Ordonnancement intelligent • FlowShop & JobShop</p>
-</header>
-
-<div class="container">
-
-<!-- ===== ÉTAPE 1 : Choisir le type d’atelier ===== -->
-{% if step == 1 %}
-<form method="post" class="card fade-in">
-    <input type="hidden" name="step" value="2">
-    <label>Type d’atelier :</label>
-    <select name="shop_type" required>
-        <option value="">-- Choisir --</option>
-        <option value="FlowShop">FlowShop</option>
-        <option value="JobShop">JobShop</option>
-    </select>
-    <button>Valider</button>
-</form>
-{% endif %}
-
-<!-- ===== ÉTAPE 2 : Choisir la méthode et le nombre de jobs/machines ===== -->
-{% if step == 2 %}
-<form method="post" class="card slide-in">
-    <input type="hidden" name="step" value="3">
-    <input type="hidden" name="shop_type" value="{{ shop_type }}">
-
-    <label>Méthode :</label>
-    <select name="method" required>
-        <option>FIFO</option>
-        <option>SPT</option>
-        <option>LPT</option>
-        <option>EDD</option>
-        <option>WDD</option>
-        {% if shop_type == 'FlowShop' %}
-        <option>Johnson</option>
-        <option>CDS</option>
-        {% endif %}
-    </select>
-
-    <label>Nombre de jobs :</label>
-    <input type="number" name="n_jobs" min="1" required>
-
-    <label>Nombre de machines :</label>
-    <input type="number" name="n_machines" min="1" required>
-
-    <button>Suivant</button>
-</form>
-{% endif %}
-
-<!-- ===== ÉTAPE 3 : Remplir tableau des jobs ===== -->
-{% if step == 3 %}
-<form method="post" class="card zoom-in">
-    <input type="hidden" name="step" value="4">
-    <input type="hidden" name="shop_type" value="{{ shop_type }}">
-    <input type="hidden" name="method" value="{{ method }}">
-    <input type="hidden" name="n_jobs" value="{{ n_jobs }}">
-    <input type="hidden" name="n_machines" value="{{ n_machines }}">
-
-    <table>
-        <tr>
-            <th>Job</th>
-            <th>Arrivée</th>
-            <th>Durée</th>
-            <th>Délai</th>
-            <th>Poids</th>
-        </tr>
-        {% for i in range(n_jobs) %}
-        <tr>
-            <td>J{{ i+1 }}</td>
-            <td><input type="number" name="arrival_{{ i }}" required></td>
-            <td><input type="number" name="duration_{{ i }}" required></td>
-            <td><input type="number" name="due_{{ i }}" required></td>
-            <td><input type="number" name="weight_{{ i }}" required></td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <button>Lancer la simulation 🚀</button>
-</form>
-{% endif %}
-
-<!-- ===== ÉTAPE 4 : Résultats ===== -->
-{% if results %}
-<div class="card results pop">
-    <h2>📊 Indicateurs</h2>
-    <ul>
-        <li><strong>Cmax :</strong> {{ results.cmax }}</li>
-        <li><strong>TFT :</strong> {{ results.tft }}</li>
-        <li><strong>TT :</strong> {{ results.tt }}</li>
-        <li><strong>TAR :</strong> {{ results.tar }}</li>
-        <li><strong>TFR :</strong> {{ results.tfr }}</li>
-    </ul>
-
-    <h2>🧩 Diagramme de Gantt</h2>
-    {% for g in gantt %}
-    <div class="gantt">
-        <span>Machine {{ g.machine }}</span>
-        <div class="bar" data-duration="{{ g.duration }}">
-            {{ g.job }} ({{ g.start }} → {{ g.end }})
+    <!-- Main Content -->
+    <div class="container">
+        <div class="main-content">
+            <!-- Sidebar Configuration -->
+            <div class="sidebar">
+                <h2>Configuration du Système</h2>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-cogs"></i>
+                        <span>Type de Système</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="systemType">Système de production</label>
+                        <div class="select-wrapper">
+                            <select id="systemType">
+                                <option value="flow-shop">Flow Shop</option>
+                                <option value="job-shop">Job Shop</option>
+                                <option value="open-shop">Open Shop</option>
+                                <option value="parallel-machines">Machines Parallèles</option>
+                            </select>
+                        </div>
+                        <p class="system-description" id="systemDescription" style="font-size: 0.85rem; color: var(--gray-color); margin-top: 8px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                            <i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 6px;"></i>
+                            Ordre fixe des machines
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-sort-amount-up"></i>
+                        <span>Règle d'Ordonnancement</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedulingRule">Algorithme d'ordonnancement</label>
+                        <div class="select-wrapper">
+                            <select id="schedulingRule">
+                                <option value="fifo">FIFO (Premier arrivé, premier servi)</option>
+                                <option value="spt">SPT (Plus court temps de traitement)</option>
+                                <option value="lpt">LPT (Plus long temps de traitement)</option>
+                                <option value="johnson">Johnson (Flow Shop 2 machines)</option>
+                                <option value="edd">EDD (Date d'échéance la plus proche)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Paramètres de Simulation</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="machineCount"><i class="fas fa-microchip"></i> Nombre de Machines</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="machineCount" min="1" max="10" value="3">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="jobCount"><i class="fas fa-tasks"></i> Nombre de Jobs</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="jobCount" min="1" max="15" value="5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dataGeneration"><i class="fas fa-database"></i> Données de Production</label>
+                        <div class="btn-group">
+                            <button id="randomData" class="btn-secondary">
+                                <i class="fas fa-random"></i> Aléatoire
+                            </button>
+                            <button id="resetData" class="btn-secondary">
+                                <i class="fas fa-redo"></i> Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="jobs-table-container">
+                    <table class="jobs-table">
+                        <thead>
+                            <tr>
+                                <th>Job</th>
+                                <th>M1</th>
+                                <th>M2</th>
+                                <th>M3</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody">
+                            <!-- Jobs will be generated here -->
+                        </tbody>
+                    </table>
+                    <div style="padding: 16px; border-top: 1px solid var(--light-gray); display: flex; justify-content: center;">
+                        <button id="addJobBtn" class="btn-secondary" style="width: auto; padding: 10px 20px;">
+                            <i class="fas fa-plus"></i> Ajouter un Job
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat">
+                        <div class="stat-value" id="jobsCount">5</div>
+                        <div class="stat-label">job(s)</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="machinesCount">3</div>
+                        <div class="stat-label">machine(s)</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="totalTime">0</div>
+                        <div class="stat-label">unités de temps</div>
+                    </div>
+                </div>
+                
+                <div class="section" style="margin-top: 28px;">
+                    <button id="runScheduling" class="btn floating">
+                        <i class="fas fa-play"></i> Exécuter l'ordonnancement
+                    </button>
+                    <button id="resetSimulation" class="btn-secondary" style="margin-top: 12px;">
+                        <i class="fas fa-redo"></i> Réinitialiser la simulation
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Main Panel -->
+            <div class="main-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Résultats de l'Ordonnancement</h2>
+                    <div>
+                        <span id="currentConfig" style="color: var(--gray-color); font-size: 0.9rem; background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-cog" style="margin-right: 6px;"></i>
+                            Flow Shop • FIFO • 5 jobs • 3 machines
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Gantt Chart -->
+                <div class="gantt-container">
+                    <div class="gantt-header">
+                        <h3 class="gantt-title"><i class="fas fa-chart-gantt"></i> Diagramme de Gantt</h3>
+                        <div style="display: flex; gap: 12px;">
+                            <button id="zoomIn" class="btn-icon" title="Zoom avant">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button id="zoomOut" class="btn-icon" title="Zoom arrière">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button id="downloadGantt" class="btn-icon" title="Télécharger">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="timeAxis" class="time-axis">
+                        <!-- Time axis will be generated here -->
+                    </div>
+                    
+                    <div id="ganttChart" class="gantt-chart">
+                        <!-- Gantt chart will be generated here -->
+                    </div>
+                </div>
+                
+                <!-- Results Metrics -->
+                <div class="results-container">
+                    <div class="result-card">
+                        <div class="result-title">Makespan (Cmax)</div>
+                        <div class="result-value" id="makespanValue">0</div>
+                        <div style="font-size: 0.85rem; color: var(--gray-color); margin-top: 12px;">
+                            <i class="fas fa-clock"></i> Temps total pour compléter tous les jobs
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Temps de séjour moyen</div>
+                        <div class="result-value" id="flowTimeValue">0</div>
+                        <div style="font-size: 0.85rem; color: var(--gray-color); margin-top: 12px;">
+                            <i class="fas fa-hourglass-half"></i> Temps moyen passé par un job
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Temps d'attente moyen</div>
+                        <div class="result-value" id="waitTimeValue">0</div>
+                        <div style="font-size: 0.85rem; color: var(--gray-color); margin-top: 12px;">
+                            <i class="fas fa-pause-circle"></i> Temps d'inactivité moyen
+                        </div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-title">Taux d'utilisation</div>
+                        <div class="result-value" id="utilizationValue">0%</div>
+                        <div style="font-size: 0.85rem; color: var(--gray-color); margin-top: 12px;">
+                            <i class="fas fa-chart-line"></i> Pourcentage d'utilisation
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documentation -->
+                <div class="docs-container" id="documentation">
+                    <div class="docs-tabs">
+                        <button class="docs-tab active" data-tab="guide"><i class="fas fa-book-open"></i> Guide</button>
+                        <button class="docs-tab" data-tab="algorithms"><i class="fas fa-code"></i> Algorithmes</button>
+                        <button class="docs-tab" data-tab="indicators"><i class="fas fa-chart-pie"></i> Indicateurs</button>
+                    </div>
+                    
+                    <div class="docs-content active" id="guide-content">
+                        <div class="docs-section">
+                            <h3><i class="fas fa-info-circle"></i> Introduction</h3>
+                            <p>Cette application permet de simuler et optimiser l'ordonnancement de production industrielle selon différents systèmes et règles de priorité.</p>
+                        </div>
+                        
+                        <div class="docs-section">
+                            <h3><i class="fas fa-list-ol"></i> Étapes d'utilisation</h3>
+                            <p>1. Sélectionnez le type de système de production (Flow Shop, Job Shop, etc.)</p>
+                            <p>2. Choisissez l'algorithme d'ordonnancement souhaité</p>
+                            <p>3. Définissez le nombre de machines et de jobs</p>
+                            <p>4. Renseignez les temps de traitement dans le tableau interactif</p>
+                            <p>5. Cliquez sur "Exécuter l'ordonnancement" pour lancer le calcul</p>
+                            <p>6. Analysez les résultats via le diagramme de Gantt et les métriques</p>
+                        </div>
+                        
+                        <div class="docs-section">
+                            <h3><i class="fas fa-industry"></i> Types de systèmes</h3>
+                            <p><strong>Flow Shop</strong> : Tous les jobs suivent le même ordre de passage sur les machines.</p>
+                            <p><strong>Job Shop</strong> : Chaque job peut avoir un ordre de passage différent.</p>
+                            <p><strong>Open Shop</strong> : Les jobs peuvent être traités dans n'importe quel ordre.</p>
+                            <p><strong>Machines Parallèles</strong> : Plusieurs machines peuvent traiter le même type d'opération.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="docs-content" id="algorithms-content">
+                        <div class="docs-section">
+                            <h3><i class="fas fa-calculator"></i> Algorithmes d'ordonnancement</h3>
+                            <ul class="algorithm-list">
+                                <li>
+                                    <div class="algorithm-name"><i class="fas fa-arrow-right"></i> FIFO (First In First Out)</div>
+                                    <div class="algorithm-desc">Traite les jobs dans leur ordre d'arrivée. Simple mais ne garantit pas l'optimalité du makespan.</div>
+                                </li>
+                                <li>
+                                    <div class="algorithm-name"><i class="fas fa-sort-amount-down"></i> SPT (Shortest Processing Time)</div>
+                                    <div class="algorithm-desc">Priorise les jobs avec le temps de traitement total le plus court. Minimise le temps de séjour moyen.</div>
+                                </li>
+                                <li>
+                                    <div class="algorithm-name"><i class="fas fa-sort-amount-up"></i> LPT (Longest Processing Time)</div>
+                                    <div class="algorithm-desc">Priorise les jobs avec le temps de traitement total le plus long. Utile pour équilibrer la charge sur machines parallèles.</div>
+                                </li>
+                                <li>
+                                    <div class="algorithm-name"><i class="fas fa-robot"></i> Johnson (Flow Shop 2 machines)</div>
+                                    <div class="algorithm-desc">Algorithme optimal pour minimiser le makespan dans un Flow Shop à exactement 2 machines. Complexité O(n log n).</div>
+                                </li>
+                                <li>
+                                    <div class="algorithm-name"><i class="fas fa-calendar-alt"></i> EDD (Earliest Due Date)</div>
+                                    <div class="algorithm-desc">Priorise les jobs avec la date d'échéance la plus proche. Minimise le retard maximum.</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="docs-content" id="indicators-content">
+                        <div class="docs-section">
+                            <h3><i class="fas fa-chart-bar"></i> Indicateurs de performance</h3>
+                            <p><strong>Makespan (Cmax)</strong> : Temps total nécessaire pour compléter tous les jobs. C'est le temps de fin du dernier job sur la dernière machine.</p>
+                            <p><strong>Temps de séjour (Flow Time)</strong> : Temps total passé par un job dans le système, de son arrivée à sa complétion. Inclut le temps d'attente et de traitement.</p>
+                            <p><strong>Temps d'attente</strong> : Différence entre le temps de séjour et le temps de traitement. Représente le temps d'inactivité des jobs.</p>
+                            <p><strong>Taux d'utilisation</strong> : Pourcentage du temps où une machine est occupée par rapport au makespan total. Un taux élevé indique une bonne efficacité.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-{% endif %}
+    
+    <!-- Footer -->
+    <footer id="about">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>Réalisé par ZAKARI Boutayna</h3>
+                    <p>Projet Académique • Génie Électrique • 2026</p>
+                </div>
+                <div class="footer-tags">
+                    <span class="tag">Ordonnancement</span>
+                    <span class="tag">Optimisation</span>
+                    <span class="tag">Simulation</span>
+                    <span class="tag">Production</span>
+                    <span class="tag">Génie Électrique</span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-</div>
+    <script>
+        // Initial data
+        let jobs = [];
+        let machines = 3;
+        let systemType = 'flow-shop';
+        let schedulingRule = 'fifo';
+        let makespan = 0;
+        let timeScale = 10; // pixels per time unit
+        const jobColors = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+            'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+            'linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)'
+        ];
+        
+        // Initialize the application
+        function init() {
+            updateMachineCount();
+            generateRandomJobs();
+            renderJobsTable();
+            updateStats();
+            updateSystemDescription();
+            updateCurrentConfig();
+            setupEventListeners();
+            setupDocumentationTabs();
+        }
+        
+        // Generate random job data
+        function generateRandomJobs() {
+            const jobCount = parseInt(document.getElementById('jobCount').value);
+            machines = parseInt(document.getElementById('machineCount').value);
+            
+            jobs = [];
+            for (let i = 0; i < jobCount; i++) {
+                const job = {
+                    id: i + 1,
+                    name: `J${i + 1}`,
+                    times: []
+                };
+                
+                for (let m = 0; m < machines; m++) {
+                    // Generate random processing time between 1 and 15
+                    job.times.push(Math.floor(Math.random() * 15) + 1);
+                }
+                
+                jobs.push(job);
+            }
+        }
+        
+        // Render jobs table
+        function renderJobsTable() {
+            const tableBody = document.getElementById('jobsTableBody');
+            tableBody.innerHTML = '';
+            
+            jobs.forEach((job, index) => {
+                const row = document.createElement('tr');
+                
+                // Job name
+                const nameCell = document.createElement('td');
+                nameCell.textContent = job.name;
+                nameCell.style.fontWeight = '700';
+                nameCell.style.color = 'var(--primary-color)';
+                row.appendChild(nameCell);
+                
+                // Time inputs for each machine
+                for (let m = 0; m < machines; m++) {
+                    const timeCell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'time-input';
+                    input.min = '1';
+                    input.max = '100';
+                    input.value = job.times[m] || 1;
+                    input.dataset.jobIndex = index;
+                    input.dataset.machineIndex = m;
+                    
+                    input.addEventListener('change', function() {
+                        const jobIndex = parseInt(this.dataset.jobIndex);
+                        const machineIndex = parseInt(this.dataset.machineIndex);
+                        const value = parseInt(this.value) || 1;
+                        jobs[jobIndex].times[machineIndex] = value;
+                        updateTotalTime();
+                    });
+                    
+                    timeCell.appendChild(input);
+                    row.appendChild(timeCell);
+                }
+                
+                // Actions cell
+                const actionsCell = document.createElement('td');
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-icon';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = 'Supprimer ce job';
+                deleteBtn.addEventListener('click', function() {
+                    deleteJob(index);
+                });
+                
+                actionsCell.appendChild(deleteBtn);
+                row.appendChild(actionsCell);
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateTotalTime();
+        }
+        
+        // Update machine count
+        function updateMachineCount() {
+            machines = parseInt(document.getElementById('machineCount').value);
+            
+            // Update table header
+            const tableHeader = document.querySelector('.jobs-table thead tr');
+            // Clear existing machine headers (except first and last columns)
+            while (tableHeader.children.length > 2) {
+                tableHeader.removeChild(tableHeader.children[tableHeader.children.length - 2]);
+            }
+            
+            // Add machine headers
+            for (let i = 1; i <= machines; i++) {
+                const th = document.createElement('th');
+                th.textContent = `M${i}`;
+                th.innerHTML = `<i class="fas fa-microchip" style="margin-right: 6px;"></i>M${i}`;
+                tableHeader.insertBefore(th, tableHeader.lastElementChild);
+            }
+            
+            // Regenerate jobs if needed
+            if (jobs.length > 0) {
+                jobs.forEach(job => {
+                    // Adjust times array length to match new machine count
+                    if (job.times.length < machines) {
+                        // Add missing times with random values
+                        while (job.times.length < machines) {
+                            job.times.push(Math.floor(Math.random() * 15) + 1);
+                        }
+                    } else if (job.times.length > machines) {
+                        // Remove extra times
+                        job.times = job.times.slice(0, machines);
+                    }
+                });
+                
+                renderJobsTable();
+            }
+        }
+        
+        // Add a new job
+        function addJob() {
+            const jobCount = jobs.length;
+            const job = {
+                id: jobCount + 1,
+                name: `J${jobCount + 1}`,
+                times: []
+            };
+            
+            for (let m = 0; m < machines; m++) {
+                // Default processing time
+                job.times.push(Math.floor(Math.random() * 15) + 1);
+            }
+            
+            jobs.push(job);
+            document.getElementById('jobCount').value = jobs.length;
+            renderJobsTable();
+            updateStats();
+        }
+        
+        // Delete a job
+        function deleteJob(index) {
+            if (jobs.length <= 1) {
+                alert('Il doit y avoir au moins un job.');
+                return;
+            }
+            
+            jobs.splice(index, 1);
+            
+            // Update job names
+            jobs.forEach((job, idx) => {
+                job.id = idx + 1;
+                job.name = `J${idx + 1}`;
+            });
+            
+            document.getElementById('jobCount').value = jobs.length;
+            renderJobsTable();
+            updateStats();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('jobsCount').textContent = jobs.length;
+            document.getElementById('machinesCount').textContent = machines;
+            updateTotalTime();
+        }
+        
+        // Calculate and update total time
+        function updateTotalTime() {
+            let total = 0;
+            jobs.forEach(job => {
+                job.times.forEach(time => {
+                    total += time;
+                });
+            });
+            document.getElementById('totalTime').textContent = total;
+        }
+        
+        // Update system description
+        function updateSystemDescription() {
+            const descriptionElement = document.getElementById('systemDescription');
+            const systemType = document.getElementById('systemType').value;
+            
+            let description = '';
+            switch(systemType) {
+                case 'flow-shop':
+                    description = 'Ordre fixe des machines';
+                    break;
+                case 'job-shop':
+                    description = 'Ordre variable des machines';
+                    break;
+                case 'open-shop':
+                    description = 'Ordre libre des machines';
+                    break;
+                case 'parallel-machines':
+                    description = 'Machines identiques en parallèle';
+                    break;
+            }
+            descriptionElement.innerHTML = `<i class="fas fa-info-circle" style="color: var(--primary-color); margin-right: 6px;"></i>${description}`;
+        }
+        
+        // Update current configuration display
+        function updateCurrentConfig() {
+            const systemText = document.getElementById('systemType').options[document.getElementById('systemType').selectedIndex].text;
+            const ruleText = document.getElementById('schedulingRule').options[document.getElementById('schedulingRule').selectedIndex].text.split(' ')[0];
+            
+            document.getElementById('currentConfig').innerHTML = 
+                `<i class="fas fa-cog" style="margin-right: 6px;"></i>${systemText} • ${ruleText} • ${jobs.length} jobs • ${machines} machines`;
+        }
+        
+        // Run scheduling simulation
+        function runScheduling() {
+            systemType = document.getElementById('systemType').value;
+            schedulingRule = document.getElementById('schedulingRule').value;
+            
+            // Apply scheduling rule to order jobs
+            let orderedJobs = [...jobs];
+            
+            switch(schedulingRule) {
+                case 'spt':
+                    // Shortest Processing Time first
+                    orderedJobs.sort((a, b) => {
+                        const totalA = a.times.reduce((sum, time) => sum + time, 0);
+                        const totalB = b.times.reduce((sum, time) => sum + time, 0);
+                        return totalA - totalB;
+                    });
+                    break;
+                case 'lpt':
+                    // Longest Processing Time first
+                    orderedJobs.sort((a, b) => {
+                        const totalA = a.times.reduce((sum, time) => sum + time, 0);
+                        const totalB = b.times.reduce((sum, time) => sum + time, 0);
+                        return totalB - totalA;
+                    });
+                    break;
+                case 'johnson':
+                    // Johnson's algorithm (for 2 machines)
+                    if (machines === 2) {
+                        orderedJobs = applyJohnsonAlgorithm(orderedJobs);
+                    }
+                    break;
+                // FIFO is default - no sorting needed
+            }
+            
+            // Calculate schedule
+            const schedule = calculateSchedule(orderedJobs);
+            
+            // Update metrics
+            updateMetrics(schedule);
+            
+            // Render Gantt chart
+            renderGanttChart(schedule);
+            
+            // Update configuration display
+            updateCurrentConfig();
+            
+            // Show success animation
+            const runBtn = document.getElementById('runScheduling');
+            runBtn.innerHTML = '<i class="fas fa-check"></i> Simulation exécutée';
+            runBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            
+            setTimeout(() => {
+                runBtn.innerHTML = '<i class="fas fa-play"></i> Exécuter l\'ordonnancement';
+                runBtn.style.background = 'var(--primary-gradient)';
+            }, 2000);
+        }
+        
+        // Apply Johnson's algorithm for 2-machine flow shop
+        function applyJohnsonAlgorithm(jobs) {
+            const list1 = []; // Jobs with time on M1 <= time on M2
+            const list2 = []; // Jobs with time on M1 > time on M2
+            
+            jobs.forEach(job => {
+                if (job.times[0] <= job.times[1]) {
+                    list1.push(job);
+                } else {
+                    list2.push(job);
+                }
+            });
+            
+            // Sort list1 by increasing time on M1
+            list1.sort((a, b) => a.times[0] - b.times[0]);
+            
+            // Sort list2 by decreasing time on M2
+            list2.sort((a, b) => b.times[1] - a.times[1]);
+            
+            // Combine lists
+            return [...list1, ...list2];
+        }
+        
+        // Calculate schedule based on system type
+        function calculateSchedule(orderedJobs) {
+            const schedule = {
+                machines: [],
+                makespan: 0
+            };
+            
+            // Initialize machines
+            for (let i = 0; i < machines; i++) {
+                schedule.machines[i] = {
+                    id: i,
+                    jobs: []
+                };
+            }
+            
+            // For Flow Shop system
+            if (systemType === 'flow-shop') {
+                let currentTime = 0;
+                
+                // Process each job in order
+                orderedJobs.forEach(job => {
+                    let jobStartTime = currentTime;
+                    
+                    // Each job goes through all machines in order
+                    for (let m = 0; m < machines; m++) {
+                        const processingTime = job.times[m];
+                        
+                        // For first machine, start at currentTime
+                        // For subsequent machines, start at max(currentTime, previous machine finish time)
+                        if (m > 0) {
+                            // Find when the previous operation on this job finishes
+                            const prevOpFinish = schedule.machines[m-1].jobs
+                                .find(op => op.jobId === job.id)?.finish || 0;
+                            jobStartTime = Math.max(jobStartTime, prevOpFinish);
+                        }
+                        
+                        const jobOp = {
+                            jobId: job.id,
+                            jobName: job.name,
+                            start: jobStartTime,
+                            finish: jobStartTime + processingTime,
+                            duration: processingTime,
+                            color: jobColors[(job.id - 1) % jobColors.length]
+                        };
+                        
+                        schedule.machines[m].jobs.push(jobOp);
+                        jobStartTime += processingTime;
+                    }
+                    
+                    // Update current time for next job (start time on first machine)
+                    currentTime = schedule.machines[0].jobs[schedule.machines[0].jobs.length - 1].start;
+                });
+                
+                // Calculate makespan (max finish time on last machine)
+                schedule.makespan = Math.max(...schedule.machines[machines-1].jobs.map(j => j.finish));
+            }
+            
+            return schedule;
+        }
+        
+        // Update performance metrics
+        function updateMetrics(schedule) {
+            // Calculate makespan
+            makespan = schedule.makespan;
+            document.getElementById('makespanValue').textContent = makespan;
+            
+            // Calculate flow time (for each job, time from start to finish)
+            let totalFlowTime = 0;
+            let totalWaitTime = 0;
+            let totalProcessingTime = 0;
+            
+            // For each job, find its last operation
+            jobs.forEach(job => {
+                let jobFinish = 0;
+                let jobStart = Infinity;
+                
+                schedule.machines.forEach(machine => {
+                    machine.jobs.forEach(op => {
+                        if (op.jobId === job.id) {
+                            jobFinish = Math.max(jobFinish, op.finish);
+                            jobStart = Math.min(jobStart, op.start);
+                        }
+                    });
+                });
+                
+                const flowTime = jobFinish - jobStart;
+                const processingTime = job.times.reduce((sum, time) => sum + time, 0);
+                const waitTime = flowTime - processingTime;
+                
+                totalFlowTime += flowTime;
+                totalProcessingTime += processingTime;
+                totalWaitTime += waitTime;
+            });
+            
+            // Calculate averages
+            const avgFlowTime = jobs.length > 0 ? Math.round(totalFlowTime / jobs.length) : 0;
+            const avgWaitTime = jobs.length > 0 ? Math.round(totalWaitTime / jobs.length) : 0;
+            
+            document.getElementById('flowTimeValue').textContent = avgFlowTime;
+            document.getElementById('waitTimeValue').textContent = avgWaitTime;
+            
+            // Calculate utilization rate
+            let totalMachineTime = 0;
+            schedule.machines.forEach(machine => {
+                machine.jobs.forEach(op => {
+                    totalMachineTime += op.duration;
+                });
+            });
+            
+            const utilization = makespan > 0 ? Math.round((totalMachineTime / (makespan * machines)) * 100) : 0;
+            document.getElementById('utilizationValue').textContent = `${utilization}%`;
+        }
+        
+        // Render Gantt chart
+        function renderGanttChart(schedule) {
+            const ganttChart = document.getElementById('ganttChart');
+            const timeAxis = document.getElementById('timeAxis');
+            
+            // Clear previous chart
+            ganttChart.innerHTML = '';
+            timeAxis.innerHTML = '';
+            
+            // Create time axis
+            const timeUnits = Math.ceil(makespan / 5) * 5; // Round up to nearest 5
+            for (let t = 0; t <= timeUnits; t += 5) {
+                const tick = document.createElement('div');
+                tick.className = 'time-tick';
+                tick.textContent = t;
+                timeAxis.appendChild(tick);
+            }
+            
+            // Create machine rows
+            schedule.machines.forEach(machine => {
+                const machineRow = document.createElement('div');
+                machineRow.className = 'gantt-machine';
+                
+                const label = document.createElement('div');
+                label.className = 'gantt-machine-label';
+                label.innerHTML = `<i class="fas fa-industry"></i> Machine ${machine.id + 1}`;
+                machineRow.appendChild(label);
+                
+                const timeline = document.createElement('div');
+                timeline.className = 'gantt-timeline';
+                timeline.style.width = `${makespan * timeScale}px`;
+                
+                // Add job operations to timeline
+                machine.jobs.forEach(op => {
+                    const jobElement = document.createElement('div');
+                    jobElement.className = 'gantt-job';
+                    jobElement.style.left = `${op.start * timeScale}px`;
+                    jobElement.style.width = `${op.duration * timeScale}px`;
+                    jobElement.style.background = op.color;
+                    jobElement.textContent = `${op.jobName} (${op.duration})`;
+                    jobElement.title = `${op.jobName}: Début ${op.start} - Fin ${op.finish} (Durée: ${op.duration})`;
+                    jobElement.dataset.job = op.jobName;
+                    jobElement.dataset.duration = op.duration;
+                    
+                    timeline.appendChild(jobElement);
+                });
+                
+                machineRow.appendChild(timeline);
+                ganttChart.appendChild(machineRow);
+            });
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // System type change
+            document.getElementById('systemType').addEventListener('change', function() {
+                updateSystemDescription();
+                updateCurrentConfig();
+            });
+            
+            // Scheduling rule change
+            document.getElementById('schedulingRule').addEventListener('change', updateCurrentConfig);
+            
+            // Machine count change
+            document.getElementById('machineCount').addEventListener('change', function() {
+                updateMachineCount();
+                updateStats();
+                updateCurrentConfig();
+            });
+            
+            // Job count change
+            document.getElementById('jobCount').addEventListener('change', function() {
+                const newCount = parseInt(this.value);
+                const currentCount = jobs.length;
+                
+                if (newCount > currentCount) {
+                    // Add jobs
+                    for (let i = currentCount; i < newCount; i++) {
+                        addJob();
+                    }
+                } else if (newCount < currentCount) {
+                    // Remove jobs
+                    jobs = jobs.slice(0, newCount);
+                    renderJobsTable();
+                    updateStats();
+                }
+                
+                updateCurrentConfig();
+            });
+            
+            // Random data button
+            document.getElementById('randomData').addEventListener('click', function() {
+                generateRandomJobs();
+                renderJobsTable();
+                updateStats();
+            });
+            
+            // Reset data button
+            document.getElementById('resetData').addEventListener('click', function() {
+                jobs.forEach(job => {
+                    job.times = job.times.map(() => 1);
+                });
+                renderJobsTable();
+                updateStats();
+            });
+            
+            // Add job button
+            document.getElementById('addJobBtn').addEventListener('click', addJob);
+            
+            // Run scheduling button
+            document.getElementById('runScheduling').addEventListener('click', runScheduling);
+            
+            // Reset simulation button
+            document.getElementById('resetSimulation').addEventListener('click', function() {
+                generateRandomJobs();
+                renderJobsTable();
+                updateStats();
+                
+                // Reset results
+                document.getElementById('makespanValue').textContent = '0';
+                document.getElementById('flowTimeValue').textContent = '0';
+                document.getElementById('waitTimeValue').textContent = '0';
+                document.getElementById('utilizationValue').textContent = '0%';
+                
+                // Clear Gantt chart
+                document.getElementById('ganttChart').innerHTML = '';
+                document.getElementById('timeAxis').innerHTML = '';
+                
+                // Show reset animation
+                this.innerHTML = '<i class="fas fa-check"></i> Simulation réinitialisée';
+                this.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-redo"></i> Réinitialiser la simulation';
+                    this.style.background = 'linear-gradient(135deg, #64748b 0%, #475569 100%)';
+                }, 2000);
+            });
+            
+            // Zoom buttons
+            document.getElementById('zoomIn').addEventListener('click', function() {
+                timeScale = Math.min(timeScale * 1.2, 50);
+                if (makespan > 0) {
+                    runScheduling(); // Re-render with new scale
+                }
+            });
+            
+            document.getElementById('zoomOut').addEventListener('click', function() {
+                timeScale = Math.max(timeScale / 1.2, 5);
+                if (makespan > 0) {
+                    runScheduling(); // Re-render with new scale
+                }
+            });
+            
+            // Download Gantt button
+            document.getElementById('downloadGantt').addEventListener('click', function() {
+                alert('Fonctionnalité de téléchargement du diagramme de Gantt à implémenter.');
+            });
+            
+            // Mobile menu button
+            document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+                document.getElementById('navLinks').classList.toggle('active');
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-bars')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+            
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('navLinks').classList.remove('active');
+                    document.getElementById('mobileMenuBtn').querySelector('i').classList.remove('fa-times');
+                    document.getElementById('mobileMenuBtn').querySelector('i').classList.add('fa-bars');
+                });
+            });
+        }
+        
+        // Setup documentation tabs
+        function setupDocumentationTabs() {
+            const tabs = document.querySelectorAll('.docs-tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.docs-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                });
+            });
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
